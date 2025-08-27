@@ -10,6 +10,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Helper functions untuk database operations
+// Tambahkan fungsi-fungsi ini ke file supabase.js yang sudah ada
+
+// Generic CRUD operations
 export const db = {
   // Program Studi
   async getProgramStudi() {
@@ -365,45 +368,122 @@ export const db = {
   },
 
   // CRUD functions for all tables
+  // Get all data from any table
   async getAllData(tableName) {
-    const { data, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error(`Error fetching ${tableName}:`, error);
+      throw error;
+    }
   },
 
-  async createData(tableName, newData) {
-    const { data, error } = await supabase
-      .from(tableName)
-      .insert(newData)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+  // Insert data to any table
+  async insertData(tableName, data) {
+    try {
+      const { data: result, error } = await supabase
+        .from(tableName)
+        .insert([data])
+        .select();
+      
+      if (error) throw error;
+      return result[0];
+    } catch (error) {
+      console.error(`Error inserting to ${tableName}:`, error);
+      throw error;
+    }
   },
 
-  async updateData(tableName, id, updatedData) {
-    const { data, error } = await supabase
-      .from(tableName)
-      .update(updatedData)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+  // Update data in any table
+  async updateData(tableName, id, data) {
+    try {
+      const { data: result, error } = await supabase
+        .from(tableName)
+        .update(data)
+        .eq('id', id)
+        .select();
+      
+      if (error) throw error;
+      return result[0];
+    } catch (error) {
+      console.error(`Error updating ${tableName}:`, error);
+      throw error;
+    }
   },
 
+  // Delete data from any table
   async deleteData(tableName, id) {
-    const { error } = await supabase
-      .from(tableName)
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      console.error(`Error deleting from ${tableName}:`, error);
+      throw error;
+    }
+  },
+
+  // Specific functions for complex operations
+  async getKurikulumWithMataKuliah(kurikulumId) {
+    try {
+      const { data, error } = await supabase
+        .from('kurikulum_mata_kuliah')
+        .select(`
+          *,
+          kurikulum:kurikulum_id(*),
+          mata_kuliah:mata_kuliah_id(*)
+        `)
+        .eq('kurikulum_id', kurikulumId);
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching kurikulum with mata kuliah:', error);
+      throw error;
+    }
+  },
+
+  async getPortofolioWithMahasiswa() {
+    try {
+      const { data, error } = await supabase
+        .from('portofolio')
+        .select(`
+          *,
+          mahasiswa:mahasiswa_id(*)
+        `);
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching portofolio with mahasiswa:', error);
+      throw error;
+    }
+  },
+
+  async getSkillsWithMahasiswa() {
+    try {
+      const { data, error } = await supabase
+        .from('skills')
+        .select(`
+          *,
+          mahasiswa:mahasiswa_id(*)
+        `);
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error fetching skills with mahasiswa:', error);
+      throw error;
+    }
   }
-}
+};
